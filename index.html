@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holiday Destination Finder</title>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .package {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Find Your Next Holiday Destination</h1>
+    <input id="search-input" type="text" placeholder="Enter a destination" style="width: 80%;">
+    <button onclick="searchPlaces()">Search</button>
+    <div id="map"></div>
+    <h2>Recommended Travel Packages</h2>
+    <div id="packages">
+        <!-- Example travel packages (these can be dynamically generated or static) -->
+        <div class="package">
+            <h3>Beach Paradise</h3>
+            <p>7 days in Maldives</p>
+            <p>Price: £1500</p>
+            <button onclick="bookPackage('Beach Paradise')">Book Now</button>
+        </div>
+        <div class="package">
+            <h3>Mountain Adventure</h3>
+            <p>5 days in the Swiss Alps</p>
+            <p>Price: £1200</p>
+            <button onclick="bookPackage('Mountain Adventure')">Book Now</button>
+        </div>
+    </div>
+    <div id="results"></div>
+
+    <script>
+        let map;
+        let service;
+        let infowindow;
+
+        function initMap() {
+            // Initialize the map centered on the user's location or a default location
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: {lat: -34.397, lng: 150.644},
+                zoom: 6
+            });
+
+            infowindow = new google.maps.InfoWindow();
+        }
+
+        function searchPlaces() {
+            const input = document.getElementById('search-input').value;
+
+            const request = {
+                query: input,
+                fields: ['name', 'geometry', 'place_id', 'formatted_address', 'rating', 'user_ratings_total'],
+            };
+
+            service = new google.maps.places.PlacesService(map);
+            service.findPlaceFromQuery(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    // Clear previous results
+                    document.getElementById('results').innerHTML = '';
+
+                    for (let i = 0; i < results.length; i++) {
+                        createMarker(results[i]);
+                        displayResult(results[i]);
+                    }
+                    map.setCenter(results[0].geometry.location);
+                }
+            });
+        }
+
+        function createMarker(place) {
+            if (!place.geometry || !place.geometry.location) return;
+
+            const marker = new google.maps.Marker({
+                map: map,
+                position: place.geometry.location,
+            });
+
+            google.maps.event.addListener(marker, 'click', function() {
+                infowindow.setContent(place.name || '');
+                infowindow.open(map, marker);
+            });
+        }
+
+        function displayResult(place) {
+            const resultsDiv = document.getElementById('results');
+            const placeInfo = document.createElement('div');
+            placeInfo.innerHTML = `
+                <h3>${place.name}</h3>
+                <p>Address: ${place.formatted_address}</p>
+                <p>Rating: ${place.rating} (${place.user_ratings_total} reviews)</p>
+                <button onclick="choosePackage('${place.place_id}', '${place.name}')">Choose this destination</button>
+                <hr>
+            `;
+            resultsDiv.appendChild(placeInfo);
+        }
+
+        function choosePackage(placeId, placeName) {
+            alert(`You have chosen ${placeName} as your destination. Now, choose a travel package.`);
+            // Here you can add logic to navigate to a page with travel packages or process the selection
+        }
+
+        function bookPackage(packageName) {
+            alert(`You have selected the ${packageName} package. Redirecting to booking page...`);
+            // Here you can add logic to navigate to a booking page
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAofLbWqpM_AZLdiJOtyqYpWH8RXrwKSpE&libraries=places&callback=initMap"></script>
+</body>
+</html>
